@@ -1,4 +1,4 @@
-
+#Author Filip Malmberg
 import keyring
 import os
 import pymysql
