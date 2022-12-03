@@ -43,7 +43,7 @@ def dbupload(cmd1, cmd2):
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui, self).__init__()
-        uic.loadUi('labelprinter.ui', self)
+        uic.loadUi('g.ui', self)
         self.show()
         self.lineEdit.returnPressed.connect(self.classify_input)
         self.actionRegister_Filter_Rack.triggered.connect(self.Register_Filter_Rack)
