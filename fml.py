@@ -15,12 +15,17 @@ from PyQt5.QtGui import QColor
 
 user = os.getlogin()
 dbpw = keyring.get_password("172.28.88.47", "simdbuploader")
+fspw = keyring.get_password("fs", "svc-supply-chain")
 
 
-def sqlquery(column,sap):
-    db = pymysql.connect(host="172.28.88.47",user="simdbuploader",password=dbpw,database="simdb")
-    cursor = db.cursor()
-    cursor.execute(f"SELECT {column} FROM simdb.product_label WHERE pn='{sap}'")
+def sqlquery(query):
+    try:
+        db = pymysql.connect(host="172.28.88.47",user="simdbuploader",password=dbpw,database="simdb")
+        cursor = db.cursor()
+        cursor.execute(f"{query}")
+    except Exception:
+        warning_dialog('Unable to connect to database')
+        return
     try:
         result = cursor.fetchone()[0]
     except Exception:
@@ -38,6 +43,15 @@ def dbupload(cmd1, cmd2):
     db.commit()
     cursor.close()
     db.close()
+
+
+def warning_dialog(message):
+    dlg = QtWidgets.QMessageBox()
+    dlg.setWindowTitle("Warning!")
+    dlg.setText(message)
+    dlg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+    dlg.setIcon(QtWidgets.QMessageBox.Question)
+    button = dlg.exec()
 
 
 class Ui(QtWidgets.QMainWindow):
@@ -59,11 +73,12 @@ class Ui(QtWidgets.QMainWindow):
         dlg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         dlg.setIcon(QtWidgets.QMessageBox.Question)
         button = dlg.exec()
-
         if button == QtWidgets.QMessageBox.Yes:
             return True
         else:
             return False
+
+
 
     def classify_input(self):
         user_input = str(self.lineEdit.text())
