@@ -70,6 +70,14 @@ class Ui(QtWidgets.QMainWindow):
         self.actionProject_Label.triggered.connect(self.Project_Label)
         self.actionRegister_Router_Rack.triggered.connect(self.Register_Router_Rack)
         self.pushButton.clicked.connect(self.print_label)
+        self.checkBox.stateChanged.connect(self.resize_window)
+
+    def resize_window(self):
+        if self.frameGeometry().width() == 420:
+            self.setFixedWidth(620)
+        else:
+            self.setFixedWidth(420)
+
 
     def reprint_label_dialog(self):
         dlg = QtWidgets.QMessageBox(self)
@@ -83,10 +91,10 @@ class Ui(QtWidgets.QMainWindow):
         else:
             return False
 
-
-
     def classify_input(self):
         user_input = str(self.lineEdit.text())
+        self.textBrowser.append(user_input)
+
         if self.lineEdit_7.text() != 'Register Filter Rack':
             if len(user_input) == 6 and user_input[:2] == '60' or len(user_input) == 9 and user_input[:2] == '60' and '-' in user_input:
                 self.lineEdit_2.setText(user_input)
@@ -98,7 +106,7 @@ class Ui(QtWidgets.QMainWindow):
                 self.lineEdit_3.setText(user_input)
             if self.lineEdit_7.text() == 'Project Label':
                 sap = self.lineEdit_2.text()
-                serialcheck = sqlquery('serial',sap)
+                serialcheck = sqlquery(f"SELECT serial FROM simdb.standardprojectglabels WHERE pn='{sap}'")
                 if serialcheck == 'True':
                     if len(self.lineEdit_2.text()) >= 1 and len(self.lineEdit_3.text()) >= 1:
                         self.print_label()
@@ -108,6 +116,7 @@ class Ui(QtWidgets.QMainWindow):
             elif self.lineEdit_7.text() == 'Production Label' or self.lineEdit_7.text() == 'Register Router Rack':
                 if len(self.lineEdit_2.text()) >= 1 and len(self.lineEdit_3.text()) >= 1:
                     self.print_label()
+
         elif self.lineEdit_7.text() == 'Register Filter Rack':
             if len(user_input) == 6 and user_input[:2] == '60' or len(user_input) == 9 and user_input[:2] == '60' and '-' in user_input:
                 self.lineEdit_2.setText(user_input)
@@ -150,6 +159,11 @@ class Ui(QtWidgets.QMainWindow):
         self.lineEdit_4.setEnabled(True)
         self.lineEdit_5.setEnabled(True)
         self.lineEdit_6.setEnabled(True)
+        self.lineEdit_2.clear()
+        self.lineEdit_3.clear()
+        self.lineEdit_4.clear()
+        self.lineEdit_5.clear()
+        self.lineEdit_6.clear()
 
     def Production_Label(self):
         self.lineEdit_7.setText('Production Label')
@@ -165,6 +179,11 @@ class Ui(QtWidgets.QMainWindow):
         self.lineEdit_5.setEnabled(False)
         self.lineEdit_6.setEnabled(False)
         self.spinBox.setEnabled(True)
+        self.lineEdit_2.clear()
+        self.lineEdit_3.clear()
+        self.lineEdit_4.clear()
+        self.lineEdit_5.clear()
+        self.lineEdit_6.clear()
 
     def Project_Label(self):
         self.lineEdit_7.setText('Project Label')
@@ -180,6 +199,11 @@ class Ui(QtWidgets.QMainWindow):
         self.lineEdit_5.setEnabled(False)
         self.lineEdit_6.setEnabled(False)
         self.spinBox.setEnabled(True)
+        self.lineEdit_2.clear()
+        self.lineEdit_3.clear()
+        self.lineEdit_4.clear()
+        self.lineEdit_5.clear()
+        self.lineEdit_6.clear()
 
     def Register_Router_Rack(self):
         self.lineEdit_7.setText('Register Router Rack')
@@ -194,6 +218,11 @@ class Ui(QtWidgets.QMainWindow):
         self.lineEdit_5.setEnabled(False)
         self.lineEdit_6.setEnabled(False)
         self.spinBox.setEnabled(False)
+        self.lineEdit_2.clear()
+        self.lineEdit_3.clear()
+        self.lineEdit_4.clear()
+        self.lineEdit_5.clear()
+        self.lineEdit_6.clear()
 
     def print_label(self):
         sap = self.lineEdit_2.text()
@@ -203,9 +232,13 @@ class Ui(QtWidgets.QMainWindow):
         copies = self.spinBox_2.value()
 
         if self.lineEdit_7.text() == 'Production Label':
-            serial = self.lineEdit_3.text()
-            typenumber = sqlquery('type',sap)
-            template = sqlquery('template',sap)
+            sapcheck = sqlquery(f"SELECT pn FROM simdb.product_label WHERE pn='{sap}'")
+            if sapcheck == False:
+                warning_dialog('SAP number does not exist in database')
+                return
+            serial = int(self.lineEdit_3.text())
+            typenumber = sqlquery(f"SELECT type FROM simdb.product_label WHERE pn='{sap}'")
+            template = sqlquery(f"SELECT template FROM simdb.product_label WHERE pn='{sap}'")
             if labelsize == '101x152mm':
                 template = template+'p'
             commands = []
@@ -215,24 +248,27 @@ class Ui(QtWidgets.QMainWindow):
                         f"-D  serial={serial}  "\
                         f"-D  sap={sap}  "\
                         f"-D  type={typenumber}  "\
-                        f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
-                commands.append(f"-c /home/{user}/labelfiles/{serial}.pdf")
+                        f"-o  /home/{user}/fmt/labelfiles/{serial}.pdf".split("  ")
+                commands.append(f"-c /home/{user}/fml/labelfiles/{serial}.pdf")
                 subprocess.call(cmd)
                 serial = serial+1
             files_strings = " ".join(commands)
-            cmd = f"lp -n {amount} {files_strings} -d {printer} -o media={labelsize}".split()
+            cmd = f"lp -n {copies} {files_strings} -d {printer} -o media={labelsize}".split()
             subprocess.call(cmd)
 
         elif self.lineEdit_7.text() == 'Project Label':
-            serial = self.lineEdit_3.text()
-            labeloption = sqlquery('labeloption',sap)
-            description1 = sqlquery('description1',sap)
-            description2 = sqlquery('description2',sap)
-            description3 = sqlquery('description3',sap)
-            description4 = sqlquery('description4',sap)
-            description5 = sqlquery('description5',sap)
-            revision = sqlquery('revision',sap)
-            customer_pn = sqlquery('customer_pn',sap)
+            try:
+                serial = int(self.lineEdit_3.text())
+            except Exception:
+                serial = False
+            labeloption = sqlquery(f"SELECT labeloption FROM simdb.standardprojectglabels WHERE pn='{sap}'")
+            description1 = sqlquery(f"SELECT description1 FROM simdb.standardprojectglabels WHERE pn='{sap}'")
+            description2 = sqlquery(f"SELECT description2 FROM simdb.standardprojectglabels WHERE pn='{sap}'")
+            description3 = sqlquery(f"SELECT description3 FROM simdb.standardprojectglabels WHERE pn='{sap}'")
+            description4 = sqlquery(f"SELECT description4 FROM simdb.standardprojectglabels WHERE pn='{sap}'")
+            description5 = sqlquery(f"SELECT description5 FROM simdb.standardprojectglabels WHERE pn='{sap}'")
+            revision = sqlquery(f"SELECT revision FROM simdb.standardprojectglabels WHERE pn='{sap}'")
+            customer_pn = sqlquery(f"SELECT customer_pn FROM simdb.standardprojectglabels WHERE pn='{sap}'")
             todays_date = datetime.today().strftime('%Y-%m-%d')
             mmyyyy = datetime.today().strftime('%m-%Y')
             commands = []
@@ -249,16 +285,16 @@ class Ui(QtWidgets.QMainWindow):
                     f"-D  mmyyyy={mmyyyy}  "\
                     f"-D  customer_pn={customer_pn}  "\
                     f"-D  revision={revision}  "\
-                    f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
-            commands.append(f"-c /home/{user}/labelfiles/{serial}.pdf")
+                    f"-o  /home/{user}/fml/labelfiles/{serial}.pdf".split("  ")
+            commands.append(f"-c /home/{user}/fml/labelfiles/{serial}.pdf")
             subprocess.call(cmd)
             files_strings = " ".join(commands)
-            cmd = f"lp -n {amount} {files_strings} -d {printer}".split()
+            cmd = f"lp -n {copies} {files_strings} -d {printer}".split()
             subprocess.call(cmd)
             print(sap, serial, increments, printer, labelsize)
 
         elif self.lineEdit_7.text() == 'Register Router Rack':
-            serial = self.lineEdit_3.text()
+            serial = int(self.lineEdit_3.text())
             serialcheck = sqlquery(f"SELECT rackid FROM simdb.racks WHERE routerserial='{serial}'")
             if serialcheck:
                 if self.reprint_label_dialog() == True:
@@ -268,10 +304,10 @@ class Ui(QtWidgets.QMainWindow):
             #print(sap, serial, printer, labelsize)
 
         elif self.lineEdit_7.text() == 'Register Filter Rack':
-            serial = self.lineEdit_3.text()
-            serial2 = self.lineEdit_4.text()
-            serial3 = self.lineEdit_5.text()
-            serial4 = self.lineEdit_6.text()
+            serial = int(self.lineEdit_3.text())
+            serial2 = int(self.lineEdit_4.text())
+            serial3 = int(self.lineEdit_5.text())
+            serial4 = int(self.lineEdit_6.text())
             print(sap, serial, serial2, serial3, serial4, printer, labelsize)
 
 
