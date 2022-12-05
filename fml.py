@@ -248,8 +248,8 @@ class Ui(QtWidgets.QMainWindow):
                         f"-D  serial={serial}  "\
                         f"-D  sap={sap}  "\
                         f"-D  type={typenumber}  "\
-                        f"-o  /home/{user}/fmt/labelfiles/{serial}.pdf".split("  ")
-                commands.append(f"-c /home/{user}/fml/labelfiles/{serial}.pdf")
+                        f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
+                commands.append(f"-c /home/{user}/labelfiles/{serial}.pdf")
                 subprocess.call(cmd)
                 serial = serial+1
             files_strings = " ".join(commands)
@@ -285,8 +285,8 @@ class Ui(QtWidgets.QMainWindow):
                     f"-D  mmyyyy={mmyyyy}  "\
                     f"-D  customer_pn={customer_pn}  "\
                     f"-D  revision={revision}  "\
-                    f"-o  /home/{user}/fml/labelfiles/{serial}.pdf".split("  ")
-            commands.append(f"-c /home/{user}/fml/labelfiles/{serial}.pdf")
+                    f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
+            commands.append(f"-c /home/{user}/labelfiles/{serial}.pdf")
             subprocess.call(cmd)
             files_strings = " ".join(commands)
             cmd = f"lp -n {copies} {files_strings} -d {printer}".split()
