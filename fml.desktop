@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Terminal=true
+Name=FML
+Icon=/usr/share/icons/fml.png
+Exec=/home/$USER/fml/fml.py
+Categories=Application;

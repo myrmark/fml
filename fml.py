@@ -28,7 +28,8 @@ def sqlquery(query):
         db = pymysql.connect(host="172.28.88.47",user="simdbuploader",password=dbpw,database="simdb")
         cursor = db.cursor()
         cursor.execute(f"{query}")
-    except Exception:
+    except Exception as e:
+        print(e)
         warning_dialog('Unable to connect to database')
         return
     try:
@@ -235,6 +236,7 @@ class Ui(QtWidgets.QMainWindow):
             sapcheck = sqlquery(f"SELECT pn FROM simdb.product_label WHERE pn='{sap}'")
             if sapcheck == False:
                 warning_dialog('SAP number does not exist in database')
+                self.lineEdit_2.clear()
                 return
             serial = int(self.lineEdit_3.text())
             typenumber = sqlquery(f"SELECT type FROM simdb.product_label WHERE pn='{sap}'")
@@ -257,6 +259,11 @@ class Ui(QtWidgets.QMainWindow):
             subprocess.call(cmd)
 
         elif self.lineEdit_7.text() == 'Project Label':
+            sapcheck = sqlquery(f"SELECT pn FROM simdb.standardprojectglabels WHERE pn='{sap}'")
+            if sapcheck == False:
+                warning_dialog('SAP number does not exist in database')
+                self.lineEdit_2.clear()
+                return
             try:
                 serial = int(self.lineEdit_3.text())
             except Exception:
@@ -291,25 +298,163 @@ class Ui(QtWidgets.QMainWindow):
             files_strings = " ".join(commands)
             cmd = f"lp -n {copies} {files_strings} -d {printer}".split()
             subprocess.call(cmd)
-            print(sap, serial, increments, printer, labelsize)
 
         elif self.lineEdit_7.text() == 'Register Router Rack':
+            sapcheck = sqlquery(f"SELECT articlenumber FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+            if sapcheck == False:
+                warning_dialog('SAP number does not exist in database')
+                self.lineEdit_2.clear()
+                return
             serial = int(self.lineEdit_3.text())
             serialcheck = sqlquery(f"SELECT rackid FROM simdb.racks WHERE routerserial='{serial}'")
             if serialcheck:
                 if self.reprint_label_dialog() == True:
-                    print('Reprinting label')
+                    unitname = sqlquery(f"SELECT custarticlename FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+                    sapdb = sqlquery(f"SELECT custarticlenumber FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+                    rackserial = sqlquery(f"SELECT rackserial FROM simdb.racks WHERE routerserial LIKE {serial}")
+                    customerserialprefix = sqlquery(f"SELECT customerserialprefix FROM simdb.racks WHERE routerserial LIKE {serial}")
+                    customerserial = str(sqlquery(f"SELECT customerserial FROM simdb.racks WHERE routerserial LIKE {serial}"))
+                    concatenateserial = customerserialprefix+customerserial
+                    rackid = sqlquery(f"SELECT rackid FROM simdb.racks WHERE rackserial LIKE '{rackserial}'")
+                    logisticsQR = str(serial)+" - "+str(rackserial)
+                    cmd = "glabels-batch-qt  "\
+                        f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/router_rack.glabels  "\
+                        f"-D  serial={serial}  "\
+                        f"-D  sap={sap}  "\
+                        f"-D  sapdb={sapdb}  "\
+                        f"-D  name={unitname}  "\
+                        f"-D  custs={concatenateserial}  "\
+                        f"-D  rackserial={rackserial}  "\
+                        f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
+                    subprocess.run(cmd)
+                    logisticsQR = str(serial)+" - "+str(rackserial)
+                    cmd = "glabels-batch-qt  "\
+                        f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/logisticslabel.glabels  "\
+                        f"-D  serial={logisticsQR}  "\
+                        f"-o  /home/{user}/labelfiles/{serial}l.pdf".split("  ")
+                    subprocess.run(cmd)
+                    cmd = f"lp -n 1 -c /home/{user}/labelfiles/{serial}.pdf -c /home/{user}/labelfiles/{serial}.pdf -c /home/{user}/labelfiles/{serial}l.pdf -d {printer} -o media={labelsize}".split()
+                    subprocess.run(cmd)
                 else:
                     print('Not printing label')
-            #print(sap, serial, printer, labelsize)
+                    return
+            racks = sqlquery("SELECT MAX(rackserial)+1 FROM simdb.racks")
+            racks=int(racks)
+            rackserial=str(racks).zfill(6)
+            customerspecific = sqlquery(f"SELECT articlenumber FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+            if customerspecific == False:
+                unitname = "Router Rack"
+                customerserial = None
+            else:
+                unitname = sqlquery(f"SELECT custarticlename FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+                sapdb = sqlquery(f"SELECT custarticlenumber FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+                customerserialprefix = sqlquery(f"SELECT serialprefix FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+                customerserial = str(sqlquery(f"SELECT MAX(customerserial)+1 FROM simdb.racks WHERE customerserial IS NOT NULL AND customerserialprefix LIKE '{customerserialprefix}'")).split('.')[0]
+                customerserial = customerserial.zfill(4)
+            if customerserial:
+                dbupload("INSERT INTO simdb.racks (customerid, projectid, articlenumber, rackserial, routerserial, customerserialprefix, customerserial) VALUES (%s, %s, %s, %s, %s, %s, %s)", (f"{customerid}", f"{projectid}", f"{sap}", f"{rackserial}", f"{serial}", f"{customerserialprefix}", f"{customerserial}"))
+            else:
+                dbupload("INSERT INTO simdb.racks (customerid, projectid, articlenumber, rackserial, routerserial) VALUES (%s, %s, %s, %s, %s)", (f"{customerid}", f"{projectid}", f"{sap}", f"{rackserial}", f"{serial}"))
+                #sqlquery(f"INSERT INTO simdb.racks (customerid, projectid, articlenumber, rackserial, routerserial) VALUES ({customerid}, {projectid}, {sap}, {rackserial}, {serial})")
+            rackid = sqlquery(f"SELECT rackid FROM simdb.racks WHERE rackserial LIKE '{rackserial}'")
+            if rackid:
+                if customerserial:
+                    if customerserialprefix:
+                        customerserialprefix=str(customerserialprefix)
+                        customerserial=str(customerserial)
+                        concatenateserial = customerserialprefix+customerserial
+                    else:
+                        concatenateserial = customerserial
+                cmd = "glabels-batch-qt  "\
+                        f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/router_rack.glabels  "\
+                        f"-D  serial={serial}  "\
+                        f"-D  sap={sap}  "\
+                        f"-D  sapdb={sapdb}  "\
+                        f"-D  name={unitname}  "\
+                        f"-D  custs={concatenateserial}  "\
+                        f"-D  rackserial={rackserial}  "\
+                        f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
+                subprocess.run(cmd)
+                logisticsQR = str(serial)+" - "+str(rackserial)
+                cmd = "glabels-batch-qt  "\
+                    f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/logisticslabel.glabels  "\
+                    f"-D  serial={logisticsQR}  "\
+                    f"-o  /home/{user}/labelfiles/{serial}l.pdf".split("  ")
+                subprocess.run(cmd)
+                cmd = f"lp -n 1 -c /home/{user}/labelfiles/{serial}.pdf -c /home/{user}/labelfiles/{serial}.pdf -c /home/{user}/labelfiles/{serial}l.pdf -d {printer} -o media={labelsize}".split()
+                subprocess.run(cmd)
+            else:
+                warning_dialog('Upload to database failed')
 
         elif self.lineEdit_7.text() == 'Register Filter Rack':
-            serial = int(self.lineEdit_3.text())
-            serial2 = int(self.lineEdit_4.text())
-            serial3 = int(self.lineEdit_5.text())
-            serial4 = int(self.lineEdit_6.text())
-            print(sap, serial, serial2, serial3, serial4, printer, labelsize)
-
+            sapcheck = sqlquery(f"SELECT articlenumber FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+            if sapcheck == False:
+                warning_dialog('SAP number does not exist in database')
+                self.lineEdit_2.clear()
+                return
+            filter1 = str(self.lineEdit_3.text())
+            filter2 = str(self.lineEdit_4.text())
+            filter3 = str(self.lineEdit_5.text())
+            filter4 = str(self.lineEdit_6.text())
+            filter1check = sqlquery(f"SELECT rackid FROM simdb.racks WHERE filter1 LIKE '{filter1}' OR filter2 LIKE '{filter1}' OR filter3 LIKE '{filter1}' OR filter4 LIKE '{filter1}'")
+            filter2check = sqlquery(f"SELECT rackid FROM simdb.racks WHERE filter1 LIKE '{filter2}' OR filter2 LIKE '{filter2}' OR filter3 LIKE '{filter2}' OR filter4 LIKE '{filter2}'")
+            filter3check = sqlquery(f"SELECT rackid FROM simdb.racks WHERE filter1 LIKE '{filter3}' OR filter2 LIKE '{filter3}' OR filter3 LIKE '{filter3}' OR filter4 LIKE '{filter3}'")
+            filter4check = sqlquery(f"SELECT rackid FROM simdb.racks WHERE filter1 LIKE '{filter4}' OR filter2 LIKE '{filter4}' OR filter3 LIKE '{filter4}' OR filter4 LIKE '{filter4}'")
+            if filter1check or filter2check or filter3check or filter4check:
+                warning_dialog('One or more filters already exists in database')
+                return
+            customerid = sqlquery(f"SELECT customerid FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+            projectid = sqlquery(f"SELECT projectid FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+            racks = sqlquery("SELECT MAX(rackserial)+1 FROM simdb.racks")
+            racks=int(racks)
+            rackserial=str(racks).zfill(6)
+            print(customerid, projectid, rackserial)
+            customerspecific = sqlquery(f"SELECT articlenumber FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+            if customerspecific == False:
+                unitname = "Filter Rack"
+                customerserial = None
+            else:
+                unitname = sqlquery(f"SELECT custarticlename FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+                print(unitname)
+                sapdb = sqlquery(f"SELECT custarticlenumber FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+                print(sapdb)
+                customerserialprefix = sqlquery(f"SELECT serialprefix FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+                #customerserialprefix = customerserialprefix.split('.')[0]
+                customerserial = str(sqlquery(f"SELECT MAX(customerserial)+1 FROM simdb.racks WHERE customerserial IS NOT NULL AND customerserialprefix LIKE '{customerserialprefix}'")).split('.')[0]
+                customerserial = customerserial.zfill(4)
+                print(customerserialprefix,customerserial)
+                print(type(customerserial))
+            if customerserial:
+                dbupload("INSERT INTO simdb.racks (customerid, projectid, articlenumber, rackserial, filter1, filter2, filter3, filter4, customerserialprefix, customerserial) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (f"{customerid}", f"{projectid}", f"{sap}", f"{rackserial}", f"{filter1}", f"{filter2}", f"{filter3}", f"{filter4}", f"{customerserialprefix}", f"{customerserial}"))
+            else:
+                dbupload("INSERT INTO simdb.racks (customerid, projectid, articlenumber, rackserial, filter1, filter2, filter3, filter4) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", (f"{customerid}", f"{projectid}", f"{sap}", f"{rackserial}", f"{filter1}", f"{filter2}", f"{filter3}", f"{filter4}"))
+            rackid = sqlquery(f"SELECT rackid FROM simdb.racks WHERE rackserial LIKE '{rackserial}'")
+            if rackid:
+                if customerserial:
+                    if customerserialprefix:
+                        customerserialprefix=str(customerserialprefix)
+                        customerserial=str(customerserial)
+                        concatenateserial = customerserialprefix+customerserial
+                    else:
+                        concatenateserial = customerserial
+                    cmd = "glabels-batch-qt  "\
+                            f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/filterrack.glabels  "\
+                            f"-D  sap={sap}  "\
+                            f"-D  sapdb={sapdb}  "\
+                            f"-D  name={unitname}  "\
+                            f"-D  custs={concatenateserial}  "\
+                            f"-D  rackserial={rackserial}  "\
+                            f"-o  /home/{user}/labelfiles/{rackserial}.pdf".split("  ")
+                    subprocess.run(cmd)
+                    cmd = "glabels-batch-qt  "\
+                            f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/logisticslabel.glabels  "\
+                            f"-D  serial={rackserial}  "\
+                            f"-o  /home/{user}/labelfiles/{rackserial}l.pdf".split("  ")
+                    subprocess.run(cmd)
+                    cmd = f"lp -n 1 -c /home/{user}/labelfiles/{rackserial}.pdf -c /home/{user}/labelfiles/{rackserial}l.pdf -d {printer} -o media={labelsize}".split()
+                    subprocess.run(cmd)
+            else:
+                warning_dialog('Upload to database failed')
 
 app = QtWidgets.QApplication(sys.argv)
 window = Ui()
