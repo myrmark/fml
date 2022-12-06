@@ -66,7 +66,7 @@ def warning_dialog(message):
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui, self).__init__()
-        uic.loadUi(f'/home/{user}/fml/g.ui', self)
+        uic.loadUi('/usr/local/bin/g.ui', self)
         self.show()
         self.lineEdit.returnPressed.connect(self.classify_input)
         self.actionRegister_Filter_Rack.triggered.connect(self.Register_Filter_Rack)
