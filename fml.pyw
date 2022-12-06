@@ -315,6 +315,7 @@ class Ui(QtWidgets.QMainWindow):
                 create_pdf = subprocess.run(cmd, capture_output=True)
             except Exception as e:
                 warning_dialog(str(e))
+                return
             if b'Printing 1 item on 1 page' not in create_pdf.stderr:
                 warning_dialog('Unable to find label template')
                 return
