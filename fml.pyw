@@ -314,8 +314,11 @@ class Ui(QtWidgets.QMainWindow):
             try:
                 create_pdf = subprocess.run(cmd, capture_output=True)
             except Exception as e:
-                if b"No such file or directory: 'glabels-batch-qt'" not in create_pdf.stderr:
+                if "No such file or directory: 'glabels-batch-qt'" in e:
                     warning_dialog('Glabels is not installed')
+                    return
+                else:
+                    warning_dialog('Unknown error')
                     return
             if b'Printing 1 item on 1 page' not in create_pdf.stderr:
                 warning_dialog('Unable to find label template')
