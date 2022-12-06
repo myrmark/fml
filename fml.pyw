@@ -266,7 +266,11 @@ class Ui(QtWidgets.QMainWindow):
                         f"-D  type={typenumber}  "\
                         f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
                 commands.append(f"-c /home/{user}/labelfiles/{serial}.pdf")
-                create_pdf = subprocess.run(cmd, capture_output=True)
+                try:
+                    create_pdf = subprocess.run(cmd, capture_output=True)
+                except Exception as e:
+                    warning_dialog(str(e))
+                    return
                 if b'Printing 1 item on 1 page' not in create_pdf.stderr:
                     warning_dialog('Unable to find label template')
                     return
@@ -350,7 +354,11 @@ class Ui(QtWidgets.QMainWindow):
                         f"-D  custs={concatenateserial}  "\
                         f"-D  rackserial={rackserial}  "\
                         f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
-                    create_pdf = subprocess.run(cmd, capture_output=True)
+                    try:
+                        create_pdf = subprocess.run(cmd, capture_output=True)
+                    except Exception as e:
+                        warning_dialog(str(e))
+                        return
                     if b'Printing 1 item on 1 page' not in create_pdf.stderr:
                         warning_dialog('Unable to find label template')
                         return
@@ -404,7 +412,11 @@ class Ui(QtWidgets.QMainWindow):
                         f"-D  custs={concatenateserial}  "\
                         f"-D  rackserial={rackserial}  "\
                         f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
-                create_pdf = subprocess.run(cmd, capture_output=True)
+                try:
+                    create_pdf = subprocess.run(cmd, capture_output=True)
+                except Exception as e:
+                    warning_dialog(str(e))
+                    return
                 if b'Printing 1 item on 1 page' not in create_pdf.stderr:
                     warning_dialog('Unable to find label template')
                     return
@@ -481,7 +493,11 @@ class Ui(QtWidgets.QMainWindow):
                             f"-D  custs={concatenateserial}  "\
                             f"-D  rackserial={rackserial}  "\
                             f"-o  /home/{user}/labelfiles/{rackserial}.pdf".split("  ")
-                    create_pdf = subprocess.run(cmd, capture_output=True)
+                    try:
+                        create_pdf = subprocess.run(cmd, capture_output=True)
+                    except Exception as e:
+                        warning_dialog(str(e))
+                        return
                     if b'Printing 1 item on 1 page' not in create_pdf.stderr:
                         warning_dialog('Unable to find label template')
                         return
