@@ -9,3 +9,4 @@ mkdir /mnt/fs
 chmod 777 /mnt/fs
 echo "//internal.icomera.com/dfs /mnt/fs cifs credentials=/home/$username/.smbcredentials,user	0	0" | sudo tee -a /etc/fstab
 python3 printer.py
+echo "Enter the following command in a python3 session to store the database password: keyring.set_password("172.28.88.47", "simdbuploader", getpass.getpass())"
