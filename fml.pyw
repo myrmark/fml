@@ -284,7 +284,7 @@ class Ui(QtWidgets.QMainWindow):
             try:
                 serial = int(self.lineEdit_3.text())
             except Exception:
-                serial = False
+                serial = sap
             labeloption = sqlquery(f"SELECT labeloption FROM simdb.standardprojectglabels WHERE pn='{sap}'")
             description1 = sqlquery(f"SELECT description1 FROM simdb.standardprojectglabels WHERE pn='{sap}'")
             description2 = sqlquery(f"SELECT description2 FROM simdb.standardprojectglabels WHERE pn='{sap}'")
