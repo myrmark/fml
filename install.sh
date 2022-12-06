@@ -8,3 +8,4 @@ chmod 600 /home/$username/.smbcredentials
 mkdir /mnt/fs
 chmod 777 /mnt/fs
 echo "//internal.icomera.com/dfs /mnt/fs cifs credentials=/home/$username/.smbcredentials,user	0	0" | sudo tee -a /etc/fstab
+python3 printer.py
