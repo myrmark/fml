@@ -1,6 +1,7 @@
 username=$(logname)
 cp fml.png /usr/share/icons/fml.png
 cp fml.desktop /home/$username/.local/share/applications/fml.desktop
+cp fml.pyw /usr/local/bin/fml.pyw
 echo "username=svc-supply-chain" > /home/$username/.smbcredentials
 read -sp "Enter password for svc-supply-chain: " pwd
 echo "password=$pwd" >> /home/$username/.smbcredentials
