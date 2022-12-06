@@ -1,7 +1,7 @@
 username=$(logname)
 apt install python3-pip -y
 pip install pymysql PyQt5
-export QT_QPA_PLATFORM=wayland
+export QT_QPA_PLATFORM=xcb
 cp fml.png /usr/share/icons/fml.png
 cp fml.desktop /home/$username/.local/share/applications/fml.desktop
 cp fml.pyw /usr/local/bin/fml.pyw
