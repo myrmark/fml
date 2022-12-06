@@ -1,4 +1,6 @@
 username=$(logname)
+apt install python3-pip -y
+pip install pymysql PyQt5
 cp fml.png /usr/share/icons/fml.png
 cp fml.desktop /home/$username/.local/share/applications/fml.desktop
 cp fml.pyw /usr/local/bin/fml.pyw
