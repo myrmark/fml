@@ -6,9 +6,9 @@
 PREREQUISITIES
 
 Glabels
-
-
-
+ 
+ 
+ 
 INSTALLATION
 
 Run install.sh with sudo privileges
