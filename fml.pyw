@@ -373,6 +373,7 @@ class Ui(QtWidgets.QMainWindow):
                         return
                     cmd = f"lp -n 1 -c /home/{user}/labelfiles/{serial}.pdf -c /home/{user}/labelfiles/{serial}.pdf -c /home/{user}/labelfiles/{serial}l.pdf -d {printer} -o media={labelsize}".split()
                     subprocess.run(cmd)
+                    return
                 else:
                     print('Not printing label')
                     return
@@ -449,8 +450,46 @@ class Ui(QtWidgets.QMainWindow):
             filter3check = sqlquery(f"SELECT rackid FROM simdb.racks WHERE filter1 LIKE '{filter3}' OR filter2 LIKE '{filter3}' OR filter3 LIKE '{filter3}' OR filter4 LIKE '{filter3}'")
             filter4check = sqlquery(f"SELECT rackid FROM simdb.racks WHERE filter1 LIKE '{filter4}' OR filter2 LIKE '{filter4}' OR filter3 LIKE '{filter4}' OR filter4 LIKE '{filter4}'")
             if filter1check or filter2check or filter3check or filter4check:
-                warning_dialog('One or more filters already exists in database\n\n reprint label?')
-                return
+                if self.reprint_label_dialog() == True:
+                    rackserial = sqlquery(f"SELECT rackserial FROM simdb.racks WHERE filter1 LIKE '{filter1}' OR filter2 LIKE '{filter1}' OR filter3 LIKE '{filter1}' OR filter4 LIKE '{filter1}'")
+                    customerid = sqlquery(f"SELECT customerid FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+                    projectid = sqlquery(f"SELECT projectid FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+                    unitname = sqlquery(f"SELECT custarticlename FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+                    sapdb = sqlquery(f"SELECT custarticlenumber FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
+                    customerserialprefix = sqlquery(f"SELECT customerserialprefix FROM simdb.racks WHERE routerserial LIKE {serial}")
+                    customerserial = str(sqlquery(f"SELECT customerserial FROM simdb.racks WHERE routerserial LIKE {serial}"))
+                    concatenateserial = customerserialprefix+customerserial
+                    rackid = sqlquery(f"SELECT rackid FROM simdb.racks WHERE rackserial LIKE '{rackserial}'")
+                    cmd = "glabels-batch-qt  "\
+                        f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/filterrack.glabels  "\
+                        f"-D  sap={sap}  "\
+                        f"-D  sapdb={sapdb}  "\
+                        f"-D  name={unitname}  "\
+                        f"-D  custs={concatenateserial}  "\
+                        f"-D  rackserial={rackserial}  "\
+                        f"-o  /home/{user}/labelfiles/{rackserial}.pdf".split("  ")
+                    try:
+                        create_pdf = subprocess.run(cmd, capture_output=True)
+                    except Exception as e:
+                        warning_dialog(str(e))
+                        return
+                    if b'Printing 1 item on 1 page' not in create_pdf.stderr:
+                        warning_dialog('Unable to find label template')
+                        return
+                    cmd = "glabels-batch-qt  "\
+                        f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/logisticslabel.glabels  "\
+                        f"-D  serial={rackserial}  "\
+                        f"-o  /home/{user}/labelfiles/{rackserial}l.pdf".split("  ")
+                    create_pdf = subprocess.run(cmd, capture_output=True)
+                    if b'Printing 1 item on 1 page' not in create_pdf.stderr:
+                        warning_dialog('Unable to find label template')
+                        return
+                    cmd = f"lp -n 1 -c /home/{user}/labelfiles/{rackserial}.pdf -c /home/{user}/labelfiles/{rackserial}.pdf -c /home/{user}/labelfiles/{rackserial}l.pdf -d {printer} -o media={labelsize}".split()
+                    subprocess.run(cmd)
+                    return
+                else:
+                    print('Not printing label')
+                    return
             customerid = sqlquery(f"SELECT customerid FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
             projectid = sqlquery(f"SELECT projectid FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
             racks = sqlquery("SELECT MAX(rackserial)+1 FROM simdb.racks")
