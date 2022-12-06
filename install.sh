@@ -7,7 +7,7 @@ cp fml.desktop /home/$username/.local/share/applications/fml.desktop
 cp fml.pyw /usr/local/bin/fml.pyw
 cp g.ui /usr/local/bin/g.ui
 echo "username=svc-supply-chain" > /home/$username/.smbcredentials
-read -sp "Enter password for svc-supply-chain: " pwd
+read -sp "Enter password for svc-supply-prod: " pwd
 echo "password=$pwd" >> /home/$username/.smbcredentials
 chmod 600 /home/$username/.smbcredentials
 mkdir /mnt/fs
