@@ -6,8 +6,7 @@ import subprocess
 import sys
 import tarfile
 
-print('Enter database password')
-keyring.set_password("172.28.88.47", "simdbuploader", getpass.getpass())
+user = os.getlogin()
 
 print('Checking for labelfiles folder')
 try:
