@@ -366,6 +366,7 @@ class Ui(QtWidgets.QMainWindow):
                     cmd = "glabels-batch-qt  "\
                         f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/logisticslabel.glabels  "\
                         f"-D  serial={logisticsQR}  "\
+                        f"-D  pn={sap}  "\
                         f"-o  /home/{user}/labelfiles/{serial}l.pdf".split("  ")
                     create_pdf = subprocess.run(cmd, capture_output=True)
                     if b'Printing 1 item on 1 page' not in create_pdf.stderr:
@@ -425,6 +426,7 @@ class Ui(QtWidgets.QMainWindow):
                 cmd = "glabels-batch-qt  "\
                     f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/logisticslabel.glabels  "\
                     f"-D  serial={logisticsQR}  "\
+                    f"-D  pn={sap}  "\
                     f"-o  /home/{user}/labelfiles/{serial}l.pdf".split("  ")
                 create_pdf = subprocess.run(cmd, capture_output=True)
                 if b'Printing 1 item on 1 page' not in create_pdf.stderr:
@@ -479,6 +481,7 @@ class Ui(QtWidgets.QMainWindow):
                     cmd = "glabels-batch-qt  "\
                         f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/logisticslabel.glabels  "\
                         f"-D  serial={rackserial}  "\
+                        f"-D  pn={sap}  "\
                         f"-o  /home/{user}/labelfiles/{rackserial}l.pdf".split("  ")
                     create_pdf = subprocess.run(cmd, capture_output=True)
                     if b'Printing 1 item on 1 page' not in create_pdf.stderr:
@@ -543,6 +546,7 @@ class Ui(QtWidgets.QMainWindow):
                     cmd = "glabels-batch-qt  "\
                             f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/logisticslabel.glabels  "\
                             f"-D  serial={rackserial}  "\
+                            f"-D  pn={sap}  "\
                             f"-o  /home/{user}/labelfiles/{rackserial}l.pdf".split("  ")
                     create_pdf = subprocess.run(cmd, capture_output=True)
                     if b'Printing 1 item on 1 page' not in create_pdf.stderr:
