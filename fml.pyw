@@ -1,4 +1,7 @@
+#!/usr/bin/python3
+
 #Author Filip Malmberg
+
 import keyring
 import os
 import pymysql
@@ -63,7 +66,7 @@ def warning_dialog(message):
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui, self).__init__()
-        uic.loadUi('g.ui', self)
+        uic.loadUi(f'/home/{user}/fml/g.ui', self)
         self.show()
         self.lineEdit.returnPressed.connect(self.classify_input)
         self.actionRegister_Filter_Rack.triggered.connect(self.Register_Filter_Rack)
@@ -96,27 +99,38 @@ class Ui(QtWidgets.QMainWindow):
         user_input = str(self.lineEdit.text())
         self.textBrowser.append(user_input)
 
-        if self.lineEdit_7.text() != 'Register Filter Rack':
+        if self.lineEdit_7.text() == 'Project Label':
             if len(user_input) == 6 and user_input[:2] == '60' or len(user_input) == 9 and user_input[:2] == '60' and '-' in user_input:
                 self.lineEdit_2.setText(user_input)
-                self.lineEdit_3.setText('')
-                self.lineEdit_4.setText('')
-                self.lineEdit_5.setText('')
-                self.lineEdit_6.setText('')
-            else:
-                self.lineEdit_3.setText(user_input)
-            if self.lineEdit_7.text() == 'Project Label':
                 sap = self.lineEdit_2.text()
                 serialcheck = sqlquery(f"SELECT serial FROM simdb.standardprojectglabels WHERE pn='{sap}'")
                 if serialcheck == 'True':
-                    if len(self.lineEdit_2.text()) >= 1 and len(self.lineEdit_3.text()) >= 1:
+                    if len(self.lineEdit_2.text()) >= 6 and len(self.lineEdit_3.text()) >= 1:
                         self.print_label()
                 else:
-                    if len(self.lineEdit_2.text()) >= 1:
-                        self.print_label()
-            elif self.lineEdit_7.text() == 'Production Label' or self.lineEdit_7.text() == 'Register Router Rack':
-                if len(self.lineEdit_2.text()) >= 1 and len(self.lineEdit_3.text()) >= 1:
                     self.print_label()
+            else:
+                self.lineEdit_3.setText(user_input)
+                try:
+                    sap = self.lineEdit_2.text()
+                    serialcheck = sqlquery(f"SELECT serial FROM simdb.standardprojectglabels WHERE pn='{sap}'")
+                    if serialcheck == 'True':
+                        if len(self.lineEdit_2.text()) >= 6 and len(self.lineEdit_3.text()) >= 1:
+                            self.print_label()
+                except Exception:
+                    pass
+
+        elif self.lineEdit_7.text() == 'Register Router Rack' or self.lineEdit_7.text() == 'Production Label':
+            if len(user_input) == 6 and user_input[:2] == '60' or len(user_input) == 9 and user_input[:2] == '60' and '-' in user_input:
+                self.lineEdit_2.setText(user_input)
+            else:
+                self.lineEdit_3.setText(user_input)
+            
+            try:
+                if len(self.lineEdit_2.text()) >= 6 and len(self.lineEdit_3.text()) >= 1:
+                    self.print_label()
+            except Exception:
+                pass
 
         elif self.lineEdit_7.text() == 'Register Filter Rack':
             if len(user_input) == 6 and user_input[:2] == '60' or len(user_input) == 9 and user_input[:2] == '60' and '-' in user_input:
@@ -252,7 +266,10 @@ class Ui(QtWidgets.QMainWindow):
                         f"-D  type={typenumber}  "\
                         f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
                 commands.append(f"-c /home/{user}/labelfiles/{serial}.pdf")
-                subprocess.call(cmd)
+                create_pdf = subprocess.run(cmd, capture_output=True)
+                if b'Printing 1 item on 1 page' not in create_pdf.stderr:
+                    warning_dialog('Unable to find label template')
+                    return
                 serial = serial+1
             files_strings = " ".join(commands)
             cmd = f"lp -n {copies} {files_strings} -d {printer} -o media={labelsize}".split()
@@ -294,7 +311,10 @@ class Ui(QtWidgets.QMainWindow):
                     f"-D  revision={revision}  "\
                     f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
             commands.append(f"-c /home/{user}/labelfiles/{serial}.pdf")
-            subprocess.call(cmd)
+            create_pdf = subprocess.run(cmd, capture_output=True)
+            if b'Printing 1 item on 1 page' not in create_pdf.stderr:
+                warning_dialog('Unable to find label template')
+                return
             files_strings = " ".join(commands)
             cmd = f"lp -n {copies} {files_strings} -d {printer}".split()
             subprocess.call(cmd)
@@ -326,13 +346,19 @@ class Ui(QtWidgets.QMainWindow):
                         f"-D  custs={concatenateserial}  "\
                         f"-D  rackserial={rackserial}  "\
                         f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
-                    subprocess.run(cmd)
+                    create_pdf = subprocess.run(cmd, capture_output=True)
+                    if b'Printing 1 item on 1 page' not in create_pdf.stderr:
+                        warning_dialog('Unable to find label template')
+                        return
                     logisticsQR = str(serial)+" - "+str(rackserial)
                     cmd = "glabels-batch-qt  "\
                         f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/logisticslabel.glabels  "\
                         f"-D  serial={logisticsQR}  "\
                         f"-o  /home/{user}/labelfiles/{serial}l.pdf".split("  ")
-                    subprocess.run(cmd)
+                    create_pdf = subprocess.run(cmd, capture_output=True)
+                    if b'Printing 1 item on 1 page' not in create_pdf.stderr:
+                        warning_dialog('Unable to find label template')
+                        return
                     cmd = f"lp -n 1 -c /home/{user}/labelfiles/{serial}.pdf -c /home/{user}/labelfiles/{serial}.pdf -c /home/{user}/labelfiles/{serial}l.pdf -d {printer} -o media={labelsize}".split()
                     subprocess.run(cmd)
                 else:
@@ -374,13 +400,19 @@ class Ui(QtWidgets.QMainWindow):
                         f"-D  custs={concatenateserial}  "\
                         f"-D  rackserial={rackserial}  "\
                         f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
-                subprocess.run(cmd)
+                create_pdf = subprocess.run(cmd, capture_output=True)
+                if b'Printing 1 item on 1 page' not in create_pdf.stderr:
+                    warning_dialog('Unable to find label template')
+                    return
                 logisticsQR = str(serial)+" - "+str(rackserial)
                 cmd = "glabels-batch-qt  "\
                     f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/logisticslabel.glabels  "\
                     f"-D  serial={logisticsQR}  "\
                     f"-o  /home/{user}/labelfiles/{serial}l.pdf".split("  ")
-                subprocess.run(cmd)
+                create_pdf = subprocess.run(cmd, capture_output=True)
+                if b'Printing 1 item on 1 page' not in create_pdf.stderr:
+                    warning_dialog('Unable to find label template')
+                    return
                 cmd = f"lp -n 1 -c /home/{user}/labelfiles/{serial}.pdf -c /home/{user}/labelfiles/{serial}.pdf -c /home/{user}/labelfiles/{serial}l.pdf -d {printer} -o media={labelsize}".split()
                 subprocess.run(cmd)
             else:
@@ -445,12 +477,18 @@ class Ui(QtWidgets.QMainWindow):
                             f"-D  custs={concatenateserial}  "\
                             f"-D  rackserial={rackserial}  "\
                             f"-o  /home/{user}/labelfiles/{rackserial}.pdf".split("  ")
-                    subprocess.run(cmd)
+                    create_pdf = subprocess.run(cmd, capture_output=True)
+                    if b'Printing 1 item on 1 page' not in create_pdf.stderr:
+                        warning_dialog('Unable to find label template')
+                        return
                     cmd = "glabels-batch-qt  "\
                             f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/logisticslabel.glabels  "\
                             f"-D  serial={rackserial}  "\
                             f"-o  /home/{user}/labelfiles/{rackserial}l.pdf".split("  ")
-                    subprocess.run(cmd)
+                    create_pdf = subprocess.run(cmd, capture_output=True)
+                    if b'Printing 1 item on 1 page' not in create_pdf.stderr:
+                        warning_dialog('Unable to find label template')
+                        return
                     cmd = f"lp -n 1 -c /home/{user}/labelfiles/{rackserial}.pdf -c /home/{user}/labelfiles/{rackserial}l.pdf -d {printer} -o media={labelsize}".split()
                     subprocess.run(cmd)
             else:
