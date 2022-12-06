@@ -456,8 +456,8 @@ class Ui(QtWidgets.QMainWindow):
                     projectid = sqlquery(f"SELECT projectid FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
                     unitname = sqlquery(f"SELECT custarticlename FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
                     sapdb = sqlquery(f"SELECT custarticlenumber FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
-                    customerserialprefix = sqlquery(f"SELECT customerserialprefix FROM simdb.racks WHERE routerserial LIKE {serial}")
-                    customerserial = str(sqlquery(f"SELECT customerserial FROM simdb.racks WHERE routerserial LIKE {serial}"))
+                    customerserialprefix = sqlquery(f"SELECT customerserialprefix FROM simdb.racks WHERE rackserial LIKE {rackserial}")
+                    customerserial = str(sqlquery(f"SELECT customerserial FROM simdb.racks WHERE rackserial LIKE {rackserial}"))
                     concatenateserial = customerserialprefix+customerserial
                     rackid = sqlquery(f"SELECT rackid FROM simdb.racks WHERE rackserial LIKE '{rackserial}'")
                     cmd = "glabels-batch-qt  "\
