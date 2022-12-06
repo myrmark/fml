@@ -509,7 +509,7 @@ class Ui(QtWidgets.QMainWindow):
                     if b'Printing 1 item on 1 page' not in create_pdf.stderr:
                         warning_dialog('Unable to find label template')
                         return
-                    cmd = f"lp -n 1 -c /home/{user}/labelfiles/{rackserial}.pdf -c /home/{user}/labelfiles/{rackserial}l.pdf -d {printer} -o media={labelsize}".split()
+                    cmd = f"lp -n 1 -c /home/{user}/labelfiles/{rackserial}.pdf -c /home/{user}/labelfiles/{rackserial}.pdf -c /home/{user}/labelfiles/{rackserial}l.pdf -d {printer} -o media={labelsize}".split()
                     subprocess.run(cmd)
             else:
                 warning_dialog('Upload to database failed')
