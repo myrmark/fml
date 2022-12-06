@@ -6,5 +6,6 @@
 INSTALLATION
 
 Run install.sh with sudo privileges
-Follow instructions
+
+Follow instructions on screen
 
