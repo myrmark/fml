@@ -449,7 +449,7 @@ class Ui(QtWidgets.QMainWindow):
             filter3check = sqlquery(f"SELECT rackid FROM simdb.racks WHERE filter1 LIKE '{filter3}' OR filter2 LIKE '{filter3}' OR filter3 LIKE '{filter3}' OR filter4 LIKE '{filter3}'")
             filter4check = sqlquery(f"SELECT rackid FROM simdb.racks WHERE filter1 LIKE '{filter4}' OR filter2 LIKE '{filter4}' OR filter3 LIKE '{filter4}' OR filter4 LIKE '{filter4}'")
             if filter1check or filter2check or filter3check or filter4check:
-                warning_dialog('One or more filters already exists in database')
+                warning_dialog('One or more filters already exists in database\n\n reprint label?')
                 return
             customerid = sqlquery(f"SELECT customerid FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
             projectid = sqlquery(f"SELECT projectid FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
