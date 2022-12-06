@@ -311,12 +311,14 @@ class Ui(QtWidgets.QMainWindow):
                     f"-D  revision={revision}  "\
                     f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
             commands.append(f"-c /home/{user}/labelfiles/{serial}.pdf")
-            create_pdf = subprocess.run(cmd, capture_output=True)
+            try:
+                create_pdf = subprocess.run(cmd, capture_output=True)
+            except Exception as e:
+                elif b"No such file or directory: 'glabels-batch-qt'" not in create_pdf.stderr:
+                    warning_dialog('Glabels is not installed')
+                    return
             if b'Printing 1 item on 1 page' not in create_pdf.stderr:
                 warning_dialog('Unable to find label template')
-                return
-            elif b"No such file or directory: 'glabels-batch-qt'" not in create_pdf.stderr:
-                warning_dialog('Glabels is not installed')
                 return
             files_strings = " ".join(commands)
             cmd = f"lp -n {copies} {files_strings} -d {printer}".split()
