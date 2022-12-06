@@ -2,5 +2,5 @@
 Type=Application
 Name=FML
 Icon=/usr/share/icons/fml.png
-Exec=/usr/local/bin/fml.py
+Exec=/usr/local/bin/fml.pyw
 Categories=Application;
