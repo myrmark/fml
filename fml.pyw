@@ -18,7 +18,7 @@ from PyQt5.QtGui import QColor
 
 user = os.getlogin()
 dbpw = keyring.get_password("172.28.88.47", "simdbuploader")
-fspw = keyring.get_password("fs", "svc-supply-chain")
+#fspw = keyring.get_password("fs", "svc-supply-chain")
 
 #C:\Program Files\glabels 3.99.0\bin>glabels-batch-qt.exe --printer Microsoft_Print_to_PDF --define sap=600001 C:\\Users\\filip\\Downloads\\R01.glabels
 
