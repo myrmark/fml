@@ -15,7 +15,8 @@ Run install.sh with sudo privileges
 
 Follow instructions on screen
 
-
+ 
+  
 
 ---ON DEBIAN---
 
