@@ -255,7 +255,7 @@ class Ui(QtWidgets.QMainWindow):
             serial = int(self.lineEdit_3.text())
             typenumber = sqlquery(f"SELECT type FROM simdb.product_label WHERE pn='{sap}'")
             template = sqlquery(f"SELECT template FROM simdb.product_label WHERE pn='{sap}'")
-            if labelsize == '101x152mm':
+            if labelsize == '101x157mm':
                 template = template+'p'
             commands = []
             for i in range(increments):
